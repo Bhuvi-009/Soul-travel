@@ -174,7 +174,7 @@ nav{
     background-color: var(--white);
     white-space: nowrap;
     border-radius: 5px;
-    box-shadow: 5px 5px 20px (0, 0, 0, 0.2);
+    box-shadow: 5px 5px 20px rgba(0, 0, 0, 0.2);
     z-index: -1;
 }
 
@@ -224,7 +224,7 @@ nav{
 
 .header__content p{
     margin-bottom: 2rem;
-    columns: var(--text-light);
+    color: var(--text-light);
     line-height: 1.75rem;
     text-align: center;
 }
@@ -566,15 +566,20 @@ nav{
     <script src="https://unpkg.com/scrollreveal"></script>
 
     <!-- SIGNUP MODAL -->
-    <div id="signupModal" class="modal">
-        <div class="modal-content">
-            <span class="close" id="closeModal">&times;</span>
-            <h2>Register Here</h2>
-            <form action="/signup" method="post">
-                <input type="email" name="email" placeholder="Enter your email address here" required>
-                <button type="submit" class="signup-btn">Submit</button>
-            </form>
-        </div>
+<div id="signupModal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="closeModal">&times;</span>
+        <h2>Register Here</h2>
+        <form id="signupForm">
+            <input type="text" name="firstName" placeholder="Enter your first name" required>
+            <input type="text" name="lastName" placeholder="Enter your last name" required>
+            <input type="email" name="email" placeholder="Enter your email address" required>
+            <input type="tel" name="phone" placeholder="Enter your phone number" required>
+            <button type="submit" class="signup-btn">Submit</button>
+            <p id="signupMessage"></p>
+        </form>
+    </div>
+</div>
     </div>
 
     <script>
@@ -645,33 +650,34 @@ ScrollReveal().reveal(".header__image__card", {
 const signupForm = document.getElementById("signupForm");
 const signupMessage = document.getElementById("signupMessage");
 
-
-// Handle form submission
 signupForm.addEventListener("submit", async (e) => {
-    e.preventDefault(); // Prevent page reload
-
-    const email = signupForm.email.value;
+    e.preventDefault();
+    signupMessage.style.color = "inherit";
     signupMessage.textContent = "Submitting...";
+
+    const payload = Object.fromEntries(new FormData(signupForm));
 
     try {
         const res = await fetch("/signup", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email })
+            body: JSON.stringify(payload)
         });
+        const data = await res.json();
 
         if (res.ok) {
             signupMessage.style.color = "green";
             signupMessage.textContent = "✅ Registration successful!";
             signupForm.reset();
-            setTimeout(() => modal.classList.remove("show"), 1500); // Close modal after 1.5s
+            setTimeout(() => {
+                modal.classList.remove("show");
+                signupMessage.textContent = "";
+            }, 1500);
         } else {
-            const text = await res.text();
             signupMessage.style.color = "red";
-            signupMessage.textContent = "❌ Error: " + text;
+            signupMessage.textContent = "❌ " + (data.message || "Error");
         }
     } catch (err) {
-        console.error(err);
         signupMessage.style.color = "red";
         signupMessage.textContent = "❌ Something went wrong!";
     }
